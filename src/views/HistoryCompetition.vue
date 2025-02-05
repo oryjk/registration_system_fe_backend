@@ -38,9 +38,21 @@
         <div v-for="user in selectedCompetition.userInfos" :key="user.openId" class="user-info-item">
           <img :src="`data:image/jpeg;base64,${user.avatarUrl}`" alt="用户头像" class="user-avatar" />
           <p class="user-nickname">{{ user.nickName }}</p>
-          <el-tag :type="getStatusTagType(user.stand)">
-            {{ getStatusText(user.stand) }}
-          </el-tag>
+          <div v-if="!user.isEditing" class="user-status">
+            <el-tag :type="getStatusTagType(user.stand)">
+              {{ getStatusText(user.stand) }}
+            </el-tag>
+            <el-button @click="startUserEditing(user)">修改</el-button>
+          </div>
+          <div v-else>
+            <el-select v-model="user.stand" placeholder="请选择参赛状态">
+              <el-option label="未报名" value="0" />
+              <el-option label="报名参加" value="1" />
+              <el-option label="报名无法参加" value="2" />
+            </el-select>
+            <el-button type="primary" @click="submitUserStatusChange(user)">提交</el-button>
+            <el-button @click="cancelUserEditing(user)">取消</el-button>
+          </div>
         </div>
       </div>
     </div>
@@ -78,7 +90,11 @@ const fetchCompetitions = async () => {
 const fetchCompetitionDetails = async (id: string) => {
   try {
     const response = await axios.get(`https://oryjk.cn:82/api/activity/${id}`);
-    selectedCompetition.value = response.data;
+    const data = response.data;
+    data.userInfos.forEach((user: any) => {
+      user.isEditing = false;
+    });
+    selectedCompetition.value = data;
   } catch (error) {
     console.error('获取比赛详细信息失败:', error);
   }
@@ -111,6 +127,30 @@ const submitStatusChange = async () => {
 // 取消编辑比赛状态
 const cancelStatusEdit = () => {
   isEditingStatus.value = false;
+};
+
+// 开始编辑人员参赛状态
+const startUserEditing = (user: any) => {
+  user.isEditing = true;
+};
+
+// 提交人员参赛状态修改
+const submitUserStatusChange = async (user: any) => {
+  try {
+    await axios.put(
+      `https://oryjk.cn:82/api/user/${user.openId}/status`,
+      { status: user.stand }
+    );
+    user.isEditing = false;
+    console.log('人员参赛状态更新成功');
+  } catch (error) {
+    console.error('人员参赛状态更新失败:', error);
+  }
+};
+
+// 取消编辑人员参赛状态
+const cancelUserEditing = (user: any) => {
+  user.isEditing = false;
 };
 
 // 根据参赛人员状态值返回对应的文本
@@ -199,15 +239,22 @@ onMounted(() => {
     align-items: center;
 
     .user-avatar {
-      width: 50px;
-      height: 50px;
+      width: 75px;
+      height: 75px;
       border-radius: 50%;
       object-fit: cover;
+    }
+
+    .user-status {
+      display: flex;
+      flex-direction: column;
     }
 
     .user-nickname,
     .el-tag {
       margin-top: 5px;
+      width: 100px;
+      text-align: center;
     }
 
     .el-button {
