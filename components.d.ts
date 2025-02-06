@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    CompetitionInfos: typeof import('./src/components/CompetitionInfos.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElColorPicker: typeof import('element-plus/es')['ElColorPicker']
@@ -17,6 +18,7 @@ declare module 'vue' {
     ElIcon: typeof import('element-plus/es')['ElIcon']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElInputNumber: typeof import('element-plus/es')['ElInputNumber']
+    ElLoading: typeof import('element-plus/es')['ElLoading']
     ElMain: typeof import('element-plus/es')['ElMain']
     ElMenu: typeof import('element-plus/es')['ElMenu']
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
@@ -25,6 +27,8 @@ declare module 'vue' {
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
+    ElTabPane: typeof import('element-plus/es')['ElTabPane']
+    ElTabs: typeof import('element-plus/es')['ElTabs']
     ElTag: typeof import('element-plus/es')['ElTag']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     IconCommunity: typeof import('./src/components/icons/IconCommunity.vue')['default']
