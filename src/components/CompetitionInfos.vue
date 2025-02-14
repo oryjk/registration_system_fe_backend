@@ -2,7 +2,7 @@
   <!-- 下拉框选择比赛 -->
   <el-select v-model="selectedCompetitionId" placeholder="请选择比赛" @change="onCompetitionChange">
     <el-option v-for="competition in competitions" :key="competition.id"
-      :label="competition.name +' || '+ competition.holdingDate" :value="competition.id" />
+      :label="competition.name + ' || ' + competition.holdingDate" :value="competition.id" />
   </el-select>
   <!-- 展示比赛信息 -->
   <div v-if="selectedCompetition" class="competition-info">
@@ -58,18 +58,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, defineProps } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from 'axios';
-import { LocalDateTime } from 'luxon';
+import { DateTime } from 'luxon';
+
+const emit = defineEmits(['message-from-child']); // 定义事件
 
 interface ActivityView {
   id: string;
   name: string;
   location: string;
-  startTime: LocalDateTime | null;
-  endTime: LocalDateTime | null;
+  startTime: DateTime | null;
+  endTime: DateTime | null;
   registCount: number;
-  holdingDate: LocalDateTime;
+  holdingDate: DateTime;
   status: number;
   userInfos: UserInfoView[] | null;
 }
@@ -167,10 +169,13 @@ const submitStatusChange = async () => {
     }
 
     await axios.put(
-      `${import.meta.env.VITE_API_BASE_URL}/api/activity/${selectedCompetition.value.id}/status`,
-      { status: selectedCompetition.value.status }
+      `${import.meta.env.VITE_API2_BASE_URL}/api/activity/${selectedCompetition.value.id}/status`,
+      { status: Number(selectedCompetition.value.status) }
     );
     isEditingStatus.value = false;
+    emit('message-from-child', '比赛状态更新成功');
+    selectedCompetition.value = null
+    selectedCompetitionId.value = ''
     console.log('比赛状态更新成功');
   } catch (error) {
     console.error('比赛状态更新失败:', error);
