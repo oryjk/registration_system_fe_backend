@@ -80,7 +80,7 @@ const successNotify = () => {
   })
 }
 
-const errorNotify = (msg) => {
+const errorNotify = (msg:string) => {
   ElNotification({
     title: '失败',
     message: msg,
