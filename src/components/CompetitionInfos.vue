@@ -2,7 +2,8 @@
   <!-- 下拉框选择比赛 -->
   <el-select v-model="selectedCompetitionId" placeholder="请选择比赛" @change="onCompetitionChange">
     <el-option v-for="competition in competitions" :key="competition.id"
-      :label="competition.name + ' || ' + competition.holdingDate" :value="competition.id" />
+               :label="competition.name + ' || ' + competition.holdingDate"
+               :value="competition.id"/>
   </el-select>
   <!-- 展示比赛信息 -->
   <div v-if="selectedCompetition" class="competition-info">
@@ -22,9 +23,9 @@
       </div>
       <div v-else>
         <el-select v-model="selectedCompetition.status" placeholder="请选择比赛状态">
-          <el-option label="未进行" value="0" />
-          <el-option label="进行中" value="1" />
-          <el-option label="已完赛" value="2" />
+          <el-option label="未进行" value="0"/>
+          <el-option label="进行中" value="1"/>
+          <el-option label="已完赛" value="2"/>
         </el-select>
         <el-button type="primary" @click="submitStatusChange">提交</el-button>
         <el-button @click="cancelStatusEdit">取消</el-button>
@@ -34,7 +35,7 @@
     <h2>参赛人员信息</h2>
     <div class="user-info-container">
       <div v-for="user in selectedCompetition.userInfos" :key="user.openId" class="user-info-item">
-        <img :src="getAvatarUrl(user.avatarUrl)" alt="用户头像" class="user-avatar" />
+        <img :src="getAvatarUrl(user.avatarUrl)" alt="用户头像" class="user-avatar"/>
         <p class="user-nickname">{{ user.nickName }}</p>
         <div v-if="!user.isEditing" class="user-status">
           <el-tag :type="getStatusTagType(user.stand)">
@@ -44,9 +45,9 @@
         </div>
         <div v-else>
           <el-select v-model="user.stand" placeholder="请选择参赛状态">
-            <el-option label="未报名" value="0" />
-            <el-option label="报名参加" value="1" />
-            <el-option label="报名无法参加" value="2" />
+            <el-option label="未报名" value="0"/>
+            <el-option label="报名参加" value="1"/>
+            <el-option label="报名无法参加" value="2"/>
           </el-select>
           <el-button type="primary" @click="submitUserStatusChange(user)">提交</el-button>
           <el-button @click="cancelUserEditing(user)">取消</el-button>
@@ -58,9 +59,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import {ref, onMounted} from 'vue';
 import axios from 'axios';
-import { DateTime } from 'luxon';
+import {DateTime} from 'luxon';
 
 const emit = defineEmits(['message-from-child']); // 定义事件
 
@@ -83,6 +84,7 @@ interface UserInfoView {
   stand: number;
   isEditing: boolean;
 }
+
 // 定义接收的参数
 const props = defineProps<{
   competitions: ActivityView[]
@@ -169,8 +171,11 @@ const submitStatusChange = async () => {
     }
 
     await axios.put(
-      `${import.meta.env.VITE_API2_BASE_URL}/api/activity/${selectedCompetition.value.id}/status`,
-      { status: Number(selectedCompetition.value.status) }
+      `${import.meta.env.VITE_API2_BASE_URL}/api/activity/status`,
+      {
+        status: Number(selectedCompetition.value.status),
+        id: selectedCompetition.value.id
+      }
     );
     isEditingStatus.value = false;
     emit('message-from-child', '比赛状态更新成功');
@@ -197,7 +202,7 @@ const submitUserStatusChange = async (user: UserInfoView) => {
   try {
     await axios.put(
       `${import.meta.env.VITE_API_BASE_URL}/api/user/${user.openId}/status`,
-      { status: user.stand }
+      {status: user.stand}
     );
     user.isEditing = false;
     console.log('人员参赛状态更新成功');

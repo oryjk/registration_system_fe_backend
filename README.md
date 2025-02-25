@@ -1,4 +1,4 @@
-# registration_system_fe_backend
+# registration_system_fe_backend(球队报名后台的前端项目)
 
 This template should help get you started developing with Vue 3 in Vite.
 
