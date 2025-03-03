@@ -13,6 +13,7 @@
     <p><strong>结束时间:</strong> {{ selectedCompetition.endTime }}</p>
     <p><strong>报名人数:</strong> {{ selectedCompetition.registCount }}</p>
     <p><strong>举办日期:</strong> {{ selectedCompetition.holdingDate }}</p>
+    <p><strong>费用:</strong> {{ selectedCompetition.billingType }}</p>
     <!-- 状态展示与修改 -->
     <el-form-item label="比赛状态">
       <div v-if="!isEditingStatus">
@@ -26,6 +27,7 @@
           <el-option label="未进行" value="0"/>
           <el-option label="进行中" value="1"/>
           <el-option label="已完赛" value="2"/>
+          <el-option label="已取消" value="3"/>
         </el-select>
         <el-button type="primary" @click="submitStatusChange">提交</el-button>
         <el-button @click="cancelStatusEdit">取消</el-button>
@@ -34,23 +36,30 @@
     <!-- 参赛人员信息 -->
     <h2>参赛人员信息</h2>
     <div class="user-info-container">
-      <div v-for="user in selectedCompetition.userInfos" :key="user.openId" class="user-info-item">
-        <img :src="getAvatarUrl(user.avatarUrl)" alt="用户头像" class="user-avatar"/>
-        <p class="user-nickname">{{ user.nickName }}</p>
-        <div v-if="!user.isEditing" class="user-status">
-          <el-tag :type="getStatusTagType(user.stand)">
-            {{ getStatusText(user.stand) }}
-          </el-tag>
-          <el-button @click="startUserEditing(user)">修改</el-button>
-        </div>
-        <div v-else>
-          <el-select v-model="user.stand" placeholder="请选择参赛状态">
-            <el-option label="未报名" value="0"/>
-            <el-option label="报名参加" value="1"/>
-            <el-option label="报名无法参加" value="2"/>
-          </el-select>
-          <el-button type="primary" @click="submitUserStatusChange(user)">提交</el-button>
-          <el-button @click="cancelUserEditing(user)">取消</el-button>
+      <div v-for="stand in standOrder" :key="stand"
+           class="user-info-item">
+        <h3>{{ getStatusText(Number(stand)) }}</h3>
+        <div class="group-user-info-item">
+          <div v-for="user in groupedUserInfosByStand[stand]" :key="user.openId"
+               class="user-info-item">
+            <img :src="getAvatarUrl(user.avatarUrl)" alt="用户头像" class="user-avatar"/>
+            <p class="user-nickname">{{ user.nickName }}</p>
+            <div v-if="!user.isEditing" class="user-status">
+              <el-tag :type="getStatusTagType(user.stand)">
+                {{ getStatusText(user.stand) }}
+              </el-tag>
+              <el-button @click="startUserEditing(user)">修改</el-button>
+            </div>
+            <div v-else>
+              <el-select v-model="user.stand" placeholder="请选择参赛状态">
+                <el-option label="未报名" value="0"/>
+                <el-option label="报名参加" value="1"/>
+                <el-option label="报名无法参加" value="2"/>
+              </el-select>
+              <el-button type="primary" @click="submitUserStatusChange(user)">提交</el-button>
+              <el-button @click="cancelUserEditing(user)">取消</el-button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -59,31 +68,11 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted} from 'vue';
+import {onMounted, ref} from 'vue';
 import axios from 'axios';
-import {DateTime} from 'luxon';
+import {type ActivityView, type UserInfoView} from '../functions/ActivityFunctions'
 
 const emit = defineEmits(['message-from-child']); // 定义事件
-
-interface ActivityView {
-  id: string;
-  name: string;
-  location: string;
-  startTime: DateTime | null;
-  endTime: DateTime | null;
-  registCount: number;
-  holdingDate: DateTime;
-  status: number;
-  userInfos: UserInfoView[] | null;
-}
-
-interface UserInfoView {
-  openId: string;
-  nickName: string;
-  avatarUrl: string;
-  stand: number;
-  isEditing: boolean;
-}
 
 // 定义接收的参数
 const props = defineProps<{
@@ -98,7 +87,10 @@ const selectedCompetition = ref<ActivityView | null>(null);
 const isEditingStatus = ref(false);
 
 const allUserInfo = ref<UserInfoView[]>([]);
+//0 代表未报名，1代表参加，2代表不参加
+const groupedUserInfosByStand = ref<Record<string, UserInfoView[]>>({});
 
+const standOrder = ref<string[]>(['1', '2', '0']); // 1 最前面，2 中间，0 最后面
 // 获取比赛历史信息
 const fetchCompetitions = async () => {
   try {
@@ -120,6 +112,9 @@ const fetchCompetitionDetails = async (id: string) => {
       user.isEditing = false;
     });
     selectedCompetition.value = data;
+    if (selectedCompetition.value) {
+      selectedCompetition.value.billingType = 'AA';
+    }
 
     // 合并未报名的用户信息
     if (selectedCompetition.value && allUserInfo.value.length > 0 && selectedCompetition.value.userInfos) {
@@ -130,14 +125,27 @@ const fetchCompetitionDetails = async (id: string) => {
         user.isEditing = false;
       });
       selectedCompetition.value.userInfos = [...selectedCompetition.value.userInfos, ...unregisteredUsers];
-
-      selectedCompetition.value.userInfos = sortUserInfos(selectedCompetition.value.userInfos);
+      // 按照 stand 分组
+      groupedUserInfosByStand.value = groupByStand(selectedCompetition.value.userInfos)
     }
 
   } catch (error) {
     console.error('获取比赛详细信息失败:', error);
   }
 };
+
+// 按照 stand 分组的函数
+const groupByStand = (userInfos: UserInfoView[]): Record<string, UserInfoView[]> => {
+  return userInfos.reduce((grouped, user) => {
+    const key = user.stand.toString(); // 将 stand 转为字符串作为分组键
+    if (!grouped[key]) {
+      grouped[key] = [];
+    }
+    grouped[key].push(user);
+    return grouped;
+  }, {} as Record<string, UserInfoView[]>);
+};
+
 
 // 排序函数
 const sortUserInfos = (userInfos: UserInfoView[]): UserInfoView[] => {
@@ -253,6 +261,8 @@ const getCompetitionStatusText = (status: number) => {
       return '进行中';
     case 2:
       return '已完赛';
+    case 3:
+      return '已取消';
     default:
       return '未知状态';
   }
@@ -321,57 +331,79 @@ onMounted(() => {
 
 .user-info-container {
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
   gap: 20px;
+  //justify-content: center;
+  //align-items: center;
+
   /* 可根据需要调整间距 */
-
-  .user-info-item {
+  .group-user-info-item {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
 
-    .user-avatar {
-      width: 75px;
-      height: 75px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
 
-    .user-status {
+    .user-info-item {
       display: flex;
       flex-direction: column;
-    }
+      align-items: center;
+      margin-right: 10px;
+      margin-bottom: 10px;
 
-    .user-nickname,
-    .el-tag {
-      margin-top: 5px;
-      width: 100px;
-      text-align: center;
-    }
+      .user-avatar {
+        width: 75px;
+        height: 75px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
 
-    .el-button {
-      margin-top: 5px;
-    }
+      .user-status {
+        display: flex;
+        flex-direction: column;
+      }
 
-    .status-green {
-      color: green;
-      font-weight: bold;
-    }
+      .user-nickname {
+        margin-top: 5px;
+        width: 100px; // 设置一个固定宽度
+        text-align: center;
+        white-space: nowrap; // 防止文本换行
+        overflow: hidden; // 隐藏溢出的文本
+        text-overflow: ellipsis; // 在文本溢出时显示省略号
+      }
 
-    .status-yellow {
-      color: yellow;
-      font-weight: bold;
-    }
+      .el-tag {
+        margin-top: 5px;
+        width: 100px;
+        text-align: center;
+      }
 
-    .status-red {
-      color: red;
-      font-weight: bold;
-    }
+      .el-button {
+        margin-top: 5px;
+      }
 
-    .status-unknown {
-      color: gray;
-      font-weight: bold;
+      .status-green {
+        color: green;
+        font-weight: bold;
+      }
+
+      .status-yellow {
+        color: yellow;
+        font-weight: bold;
+      }
+
+      .status-red {
+        color: red;
+        font-weight: bold;
+      }
+
+      .status-unknown {
+        color: gray;
+        font-weight: bold;
+      }
     }
   }
+
+
 }
 </style>

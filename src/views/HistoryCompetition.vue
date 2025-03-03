@@ -1,15 +1,20 @@
 <template>
   <div class="history-competition">
     <h1>历史比赛</h1>
+    <el-button type="primary" @click="clearCache">清除缓存</el-button>
     <el-tabs type="border-card" v-if="isDataLoaded">
+      <el-tab-pane label="还没有开始的比赛">
+        <CompetitionInfos :competitions="notStartedCompetitions"
+                          @message-from-child="handleMessage"/>
+      </el-tab-pane>
       <el-tab-pane label="进行中的比赛">
-        <CompetitionInfos :competitions="ongoingCompetitions" @message-from-child="handleMessage" />
+        <CompetitionInfos :competitions="ongoingCompetitions" @message-from-child="handleMessage"/>
       </el-tab-pane>
       <el-tab-pane label="已完成的比赛">
-        <CompetitionInfos :competitions="finishedCompetitions" @message-from-child="handleMessage" />
+        <CompetitionInfos :competitions="finishedCompetitions" @message-from-child="handleMessage"/>
       </el-tab-pane>
       <el-tab-pane label="取消的比赛">
-        <CompetitionInfos :competitions="notStartedCompetitions" @message-from-child="handleMessage" />
+        <CompetitionInfos :competitions="cancelCompetitions" @message-from-child="handleMessage"/>
       </el-tab-pane>
     </el-tabs>
 
@@ -17,61 +22,39 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import {onMounted, ref} from 'vue';
 import axios from 'axios';
-import { DateTime } from 'luxon';
 import CompetitionInfos from '../components/CompetitionInfos.vue'; // 导入组件
-import { ElLoading } from 'element-plus'
-import { activityFunctions } from '../functions/ActivityFunctions'
+import {ElLoading} from 'element-plus'
+import {activityFunctions, type ActivityView} from '../functions/ActivityFunctions'
 
 
-const { clearCompetitionsCache } = activityFunctions();
+const {clearCache} = activityFunctions();
 
-
-
-interface UserInfoView {
-  openId: string;
-  nickName: string;
-  avatarUrl: string;
-  stand: number;
-  isEditing: boolean;
-}
-
-interface ActivityView {
-  id: string;
-  name: string;
-  location: string;
-  startTime: DateTime | null;
-  endTime: DateTime | null;
-  registCount: number;
-  holdingDate: DateTime;
-  status: number;
-  userInfos: UserInfoView[] | null;
-}
 
 const ongoingCompetitions = ref<ActivityView[]>([]);
 const finishedCompetitions = ref<ActivityView[]>([]);
+const cancelCompetitions = ref<ActivityView[]>([]);
 const notStartedCompetitions = ref<ActivityView[]>([]);
 const isDataLoaded = ref<boolean>(false);
 
 const handleMessage = (message: string) => {
   console.log('父组件收到消息:', message);
-
-  clearCompetitionsCache();
   loadCompetitions();
 
 };
 // 获取比赛历史信息
 const fetchCompetitions = async () => {
   try {
-    const loadingInstance = ElLoading.service({ fullscreen: true, text: "数据加载中…………" })
+    const loadingInstance = ElLoading.service({fullscreen: true, text: "数据加载中…………"})
     const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/activity/all`);
     const allCompetitions: ActivityView[] = response.data;
 
     // 根据 status 属性进行分组
+    notStartedCompetitions.value = allCompetitions.filter(competition => competition.status === 0);
     ongoingCompetitions.value = allCompetitions.filter(competition => competition.status === 1);
     finishedCompetitions.value = allCompetitions.filter(competition => competition.status === 2);
-    notStartedCompetitions.value = allCompetitions.filter(competition => competition.status === 0);
+    cancelCompetitions.value = allCompetitions.filter(competition => competition.status === 3);
     isDataLoaded.value = true;
     // 存储到缓存
     setCompetitionsToCache(allCompetitions);
@@ -116,6 +99,7 @@ const loadCompetitions = async () => {
     // 根据 status 属性进行分组
     ongoingCompetitions.value = allCompetitions.filter(competition => competition.status === 1);
     finishedCompetitions.value = allCompetitions.filter(competition => competition.status === 2);
+    cancelCompetitions.value = allCompetitions.filter(competition => competition.status === 3);
     notStartedCompetitions.value = allCompetitions.filter(competition => competition.status === 0);
     isDataLoaded.value = true;
 
