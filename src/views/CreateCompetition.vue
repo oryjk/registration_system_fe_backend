@@ -80,7 +80,7 @@ const successNotify = () => {
   })
 }
 
-const errorNotify = (msg:string) => { 
+const errorNotify = (msg:string) => {
   ElNotification({
     title: '失败',
     message: msg,
@@ -89,12 +89,12 @@ const errorNotify = (msg:string) => {
 }
 // 初始化表单数据
 const formData = reactive({
-  name: '',
+  name: '周四友谊赛',
   startTime: '',
   endTime: '',
   cover: '',
   status: 0,
-  location: '',
+  location: '驿马河二期',
   holdingDate: '',
   activityInfo: {
     color: '#FFFFFF',

@@ -171,7 +171,7 @@ const submitStatusChange = async () => {
     }
 
     await axios.put(
-      `${import.meta.env.VITE_API2_BASE_URL}/api/activity/status`,
+      `${import.meta.env.VITE_API_BASE_URL}/api/activity/status`,
       {
         status: Number(selectedCompetition.value.status),
         id: selectedCompetition.value.id
@@ -273,7 +273,7 @@ const getCompetitionStatusTagType = (status: number) => {
 };
 
 const getAvatarUrl = (avatarUrl: string | null | undefined): string => {
-  if (!avatarUrl || typeof avatarUrl !== 'string') {
+  if (!avatarUrl) {
     return '/src/static/default-avatar-for-activity.png';
   }
 
