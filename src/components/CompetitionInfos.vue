@@ -108,6 +108,14 @@ const allUserInfo = ref<UserInfoView[]>([]);
 const groupedUserInfosByStand = ref<Record<string, UserInfoView[]>>({});
 
 const standOrder = ref<string[]>(['1', '2', '0']); // 1 最前面，2 中间，0 最后面
+
+interface UserActivityRequest {
+  userId: string,
+  activityId: string,
+  stand: number,
+  paid: boolean
+}
+
 // 获取比赛历史信息
 const fetchCompetitions = async () => {
   try {
@@ -231,17 +239,26 @@ const startUserEditing = (user: UserInfoView) => {
 
 // 提交人员参赛状态修改
 const submitUserStatusChange = async (user: UserInfoView) => {
-  try {
-    await axios.put(
-      `${import.meta.env.VITE_API_BASE_URL}/api/user/${user.openId}/status`,
-      {status: user.stand}
-    );
-    user.isEditing = false;
-    console.log('人员参赛状态更新成功');
-  } catch (error) {
-    console.error('人员参赛状态更新失败:', error);
+
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/user-activity/registration`,
+        {
+          userId: user.openId,
+          activityId: selectedCompetition.value?.id,
+          stand: user.stand,
+          paid: false
+        }
+      )
+      ;
+      user.isEditing = false;
+      console.log('人员参赛状态更新成功');
+    } catch
+      (error) {
+      console.error('人员参赛状态更新失败:', error);
+    }
   }
-};
+;
 
 // 取消编辑人员参赛状态
 const cancelUserEditing = (user: UserInfoView) => {
