@@ -59,10 +59,8 @@
       </el-form-item>
       <!-- 提交按钮 -->
       <el-form-item>
-        <el-button type="primary" @click="createActivity">立即创建</el-button>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="clearCache">清除缓存</el-button>
+        <el-button type="primary" @click="createActivity(0)">立即创建</el-button>
+        <el-button type="success" @click="createActivity(1)">创建并开始报名</el-button>
       </el-form-item>
     </el-form>
   </div>
@@ -140,12 +138,13 @@ const formRef = ref<InstanceType<typeof ElForm> | null>(null);
 
 
 // 提交表单方法
-const createActivity = async () => {
+const createActivity = async (status: number) => {
   const form = formRef.value;
   if (form) {
     form.validate(async (valid) => {
       if (valid) {
         try {
+          formData.status = status;
           const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/activity/publish`, formData, {
             headers: {
               'Content-Type': 'application/json'

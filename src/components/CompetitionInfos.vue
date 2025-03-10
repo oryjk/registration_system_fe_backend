@@ -9,6 +9,7 @@
   <div v-if="selectedCompetition" class="competition-info">
     <p><strong>比赛名称:</strong> {{ selectedCompetition.name }}</p>
     <p><strong>比赛地点:</strong> {{ selectedCompetition.location }}</p>
+    <p><strong>对手名称:</strong> {{ selectedActivityInfo?.opposing }}</p>
     <p><strong>开始时间:</strong> {{ selectedCompetition.startTime }}</p>
     <p><strong>结束时间:</strong> {{ selectedCompetition.endTime }}</p>
     <p><strong>报名人数:</strong> {{ selectedCompetition.registCount }}</p>
@@ -68,9 +69,14 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref} from 'vue';
+import {onMounted, ref, watch} from 'vue';
+import {useMatchStore} from '../store/matchStore.ts'
 import axios from 'axios';
-import {type ActivityView, type UserInfoView} from '../functions/ActivityFunctions'
+import {
+  type ActivityInfo,
+  type ActivityView,
+  type UserInfoView
+} from '../functions/ActivityFunctions'
 
 const emit = defineEmits(['message-from-child']); // 定义事件
 
@@ -79,10 +85,21 @@ const props = defineProps<{
   competitions: ActivityView[]
 }>();
 
+
+const matchStore = useMatchStore();
+// 监听 parentMethodExecuted 状态的变化
+watch(() => matchStore.clearCache, (newValue) => {
+  if (newValue) {
+    initialize()
+    matchStore.resetCache()
+  }
+});
+
 // 当前选择的比赛 ID
 const selectedCompetitionId = ref<string>('');
 // 当前选择的比赛信息
 const selectedCompetition = ref<ActivityView | null>(null);
+const selectedActivityInfo = ref<ActivityInfo | null>(null);
 // 控制比赛状态是否处于编辑状态
 const isEditingStatus = ref(false);
 
@@ -104,9 +121,9 @@ const fetchCompetitions = async () => {
 };
 
 // 根据比赛 ID 获取详细信息（包含 userInfos）
-const fetchCompetitionDetails = async (id: string) => {
+const fetchCompetitionDetails = async (matchId: string) => {
   try {
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/activity/${id}`);
+    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/activity/${matchId}`);
     const data = response.data;
     data.userInfos.forEach((user: UserInfoView) => {
       user.isEditing = false;
@@ -134,6 +151,11 @@ const fetchCompetitionDetails = async (id: string) => {
   }
 };
 
+const fetchCompetitionInfo = async (matchId: string) => {
+  const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/activity-info/${matchId}`);
+  selectedActivityInfo.value = response.data;
+};
+
 // 按照 stand 分组的函数
 const groupByStand = (userInfos: UserInfoView[]): Record<string, UserInfoView[]> => {
   return userInfos.reduce((grouped, user) => {
@@ -159,9 +181,11 @@ const sortUserInfos = (userInfos: UserInfoView[]): UserInfoView[] => {
   });
 };
 
+
 // 处理比赛选择变化
 const onCompetitionChange = async () => {
   await fetchCompetitionDetails(selectedCompetitionId.value);
+  await fetchCompetitionInfo(selectedCompetitionId.value);
 };
 
 // 开始编辑比赛状态
@@ -306,6 +330,7 @@ const fetchAllUserInfo = async () => {
 };
 // 封装异步初始化逻辑
 const initialize = async () => {
+  console.log("开始初始化比赛数据")
   await fetchAllUserInfo();
   await fetchCompetitions();
 };

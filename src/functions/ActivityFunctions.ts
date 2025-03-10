@@ -30,6 +30,15 @@ export interface UserInfoView {
   isEditing: boolean;
 }
 
+export interface ActivityInfo {
+  activityId: string;
+  opposing: string;
+  color: string;
+  opposingColor: string;
+  playersPerTeam: number;
+  billingType: string;
+}
+
 export const activityFunctions = () => {
 
 

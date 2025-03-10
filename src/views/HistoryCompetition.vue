@@ -1,7 +1,9 @@
 <template>
   <div class="history-competition">
     <h1>历史比赛</h1>
-    <el-button type="primary" @click="clearCache">清除缓存</el-button>
+    <div class="load-competition">
+      <el-button type="primary" @click="handleMessage('重新加载数据')">重新加载数据</el-button>
+    </div>
     <el-tabs type="border-card" v-if="isDataLoaded">
       <el-tab-pane label="还没有开始的比赛">
         <CompetitionInfos :competitions="notStartedCompetitions"
@@ -17,7 +19,6 @@
         <CompetitionInfos :competitions="cancelCompetitions" @message-from-child="handleMessage"/>
       </el-tab-pane>
     </el-tabs>
-
   </div>
 </template>
 
@@ -28,8 +29,16 @@ import CompetitionInfos from '../components/CompetitionInfos.vue'; // 导入组�
 import {ElLoading} from 'element-plus'
 import {activityFunctions, type ActivityView} from '../functions/ActivityFunctions'
 
+import {useMatchStore} from '../store/matchStore.ts'
 
+const matchStore = useMatchStore();
 const {clearCache} = activityFunctions();
+
+const clearActivityCache = () => {
+  clearCache()
+  matchStore.setCache()
+}
+
 
 
 const ongoingCompetitions = ref<ActivityView[]>([]);
@@ -40,6 +49,7 @@ const isDataLoaded = ref<boolean>(false);
 
 const handleMessage = (message: string) => {
   console.log('父组件收到消息:', message);
+  clearActivityCache();
   loadCompetitions();
 
 };
@@ -120,5 +130,10 @@ onMounted(() => {
 <style scoped lang="scss">
 .history-competition {
   padding: 20px;
+}
+
+.load-competition{
+  margin-bottom: 20px;
+  text-align: right;
 }
 </style>
