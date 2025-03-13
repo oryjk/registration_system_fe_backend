@@ -2,8 +2,7 @@
   <!-- 下拉框选择比赛 -->
   <el-select v-model="selectedCompetitionId" placeholder="请选择比赛" @change="onCompetitionChange">
     <el-option v-for="competition in competitions" :key="competition.id"
-               :label="competition.name + ' || ' + competition.holdingDate"
-               :value="competition.id"/>
+      :label="competition.name + ' || ' + competition.holdingDate" :value="competition.id" />
   </el-select>
   <!-- 展示比赛信息 -->
   <div v-if="selectedCompetition" class="competition-info">
@@ -12,7 +11,6 @@
     <p><strong>对手名称:</strong> {{ selectedActivityInfo?.opposing }}</p>
     <p><strong>开始时间:</strong> {{ selectedCompetition.startTime }}</p>
     <p><strong>结束时间:</strong> {{ selectedCompetition.endTime }}</p>
-    <p><strong>报名人数:</strong> {{ selectedCompetition.registCount }}</p>
     <p><strong>举办日期:</strong> {{ selectedCompetition.holdingDate }}</p>
     <p><strong>费用:</strong> {{ selectedCompetition.billingType }}</p>
     <!-- 状态展示与修改 -->
@@ -25,25 +23,35 @@
       </div>
       <div v-else>
         <el-select v-model="selectedCompetition.status" placeholder="请选择比赛状态">
-          <el-option label="未进行" value="0"/>
-          <el-option label="进行中" value="1"/>
-          <el-option label="已完赛" value="2"/>
-          <el-option label="已取消" value="3"/>
+          <el-option label="未进行" value="0" />
+          <el-option label="进行中" value="1" />
+          <el-option label="已完赛" value="2" />
+          <el-option label="已取消" value="3" />
         </el-select>
         <el-button type="primary" @click="submitStatusChange">提交</el-button>
         <el-button @click="cancelStatusEdit">取消</el-button>
       </div>
     </el-form-item>
     <!-- 参赛人员信息 -->
-    <h2>参赛人员信息</h2>
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative w-[300px]" role="alert">
+      <strong class="font-bold">报名参加人数: </strong>
+      <span class="block sm:inline">{{ participatingCount }}</span>
+    </div>
+    <div class="bg-red-100 border border-green-400 text-red-700 px-4 py-3 rounded relative w-[300px]" role="alert">
+      <strong class="font-bold">报名不参加人数: </strong>
+      <span class="block sm:inline">{{ notParticipatingCount }}</span>
+    </div>
+    <div class="bg-gray-100 border border-green-400 text-gray-700 px-4 py-3 rounded relative w-[300px]" role="alert">
+      <strong class="font-bold">未报名人数: </strong>
+      <span class="block sm:inline">{{ unregisteredCount }}</span>
+    </div>
+
     <div class="user-info-container">
-      <div v-for="stand in standOrder" :key="stand"
-           class="user-info-item">
-        <h3>{{ getStatusText(Number(stand)) }}</h3>
+      <div v-for="stand in standOrder" :key="stand" class="user-info-item">
+        <el-divider class="mb-2 mt-6 font-bold">{{ getStatusText(Number(stand)) }}</el-divider>
         <div class="group-user-info-item">
-          <div v-for="user in groupedUserInfosByStand[stand]" :key="user.openId"
-               class="user-info-item">
-            <img :src="getAvatarUrl(user.avatarUrl)" alt="用户头像" class="user-avatar"/>
+          <div v-for="user in groupedUserInfosByStand[stand]" :key="user.openId" class="user-info-item">
+            <img :src="getAvatarUrl(user.avatarUrl)" alt="用户头像" class="user-avatar" />
             <p class="user-nickname">{{ user.nickName }}</p>
             <div v-if="!user.isEditing" class="user-status">
               <el-tag :type="getStatusTagType(user.stand)">
@@ -53,15 +61,16 @@
             </div>
             <div v-else>
               <el-select v-model="user.stand" placeholder="请选择参赛状态">
-                <el-option label="未报名" value="0"/>
-                <el-option label="报名参加" value="1"/>
-                <el-option label="报名无法参加" value="2"/>
+                <el-option label="未报名" value="0" />
+                <el-option label="报名参加" value="1" />
+                <el-option label="报名无法参加" value="2" />
               </el-select>
               <el-button type="primary" @click="submitUserStatusChange(user)">提交</el-button>
               <el-button @click="cancelUserEditing(user)">取消</el-button>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   </div>
@@ -69,8 +78,8 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref, watch} from 'vue';
-import {useMatchStore} from '../store/matchStore.ts'
+import { onMounted, ref, watch } from 'vue';
+import { useMatchStore } from '../store/matchStore.ts'
 import axios from 'axios';
 import {
   type ActivityInfo,
@@ -104,8 +113,23 @@ const selectedActivityInfo = ref<ActivityInfo | null>(null);
 const isEditingStatus = ref(false);
 
 const allUserInfo = ref<UserInfoView[]>([]);
+
+// 不参加人数
+const participatingCount = ref<number>(0);
+// 不参加人数
+const notParticipatingCount = ref<number>(0);
+// 未报名人数
+const unregisteredCount = ref<number>(0);
 //0 代表未报名，1代表参加，2代表不参加
 const groupedUserInfosByStand = ref<Record<string, UserInfoView[]>>({});
+// 监听 allUserInfo 和 selectedCompetition 的变化，更新不参加人数和未报名人数
+watch(groupedUserInfosByStand, () => {
+  participatingCount.value = groupedUserInfosByStand.value['1']?.length || 0;
+  notParticipatingCount.value = groupedUserInfosByStand.value['2']?.length || 0;
+  unregisteredCount.value = groupedUserInfosByStand.value['0']?.length || 0;
+});
+
+
 
 const standOrder = ref<string[]>(['1', '2', '0']); // 1 最前面，2 中间，0 最后面
 
@@ -240,25 +264,25 @@ const startUserEditing = (user: UserInfoView) => {
 // 提交人员参赛状态修改
 const submitUserStatusChange = async (user: UserInfoView) => {
 
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/user-activity/registration`,
-        {
-          userId: user.openId,
-          activityId: selectedCompetition.value?.id,
-          stand: user.stand,
-          paid: false
-        }
-      )
+  try {
+    await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL}/api/user-activity/registration`,
+      {
+        userId: user.openId,
+        activityId: selectedCompetition.value?.id,
+        stand: user.stand,
+        paid: false
+      }
+    )
       ;
-      user.isEditing = false;
-      console.log('人员参赛状态更新成功');
-    } catch
-      (error) {
-      console.error('人员参赛状态更新失败:', error);
-    }
+    user.isEditing = false;
+    console.log('人员参赛状态更新成功');
+  } catch
+  (error) {
+    console.error('人员参赛状态更新失败:', error);
   }
-;
+}
+  ;
 
 // 取消编辑人员参赛状态
 const cancelUserEditing = (user: UserInfoView) => {

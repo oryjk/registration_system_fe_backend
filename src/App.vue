@@ -1,7 +1,7 @@
 <template>
-  <div id="app">
+  <div id="app" class="h-screen">
     <!-- 路由出口 -->
-    <router-view></router-view>
+    <router-view ></router-view>
   </div>
 </template>
 
@@ -10,14 +10,6 @@
 </script>
 
 <style>
-#app {
-  @apply h-screen;
-}
-
-.page-container {
-  @apply max-w-4xl mx-auto bg-white p-6 rounded-lg shadow;
-}
-
 .el-menu {
   border-right: none !important;
 }

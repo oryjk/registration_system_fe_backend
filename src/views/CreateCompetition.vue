@@ -1,6 +1,5 @@
 <template>
   <div class="page-container">
-    <h1 class="text-2xl font-bold mb-6">创建新比赛</h1>
     <el-form :model="formData" :rules="rules" ref="formRef" label-width="120px">
       <!-- 比赛名称 -->
       <el-form-item label="比赛名称" prop="name">

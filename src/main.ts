@@ -5,6 +5,7 @@ import App from './App.vue'
 import router from './router'; // 引入路由实例
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import {createPinia} from 'pinia';
+import './style.css' // 添加这行导入
 
 const pinia = createPinia();
 

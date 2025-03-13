@@ -1,38 +1,45 @@
 <template>
-  <div class="history-competition">
-    <h1>历史比赛</h1>
-    <div class="load-competition">
-      <el-button type="primary" @click="handleMessage('重新加载数据')">重新加载数据</el-button>
+  <div class="page-container">
+    <div class="history-competition">
+      <el-tabs type="border-card" v-if="isDataLoaded">
+        <el-tab-pane label="还没有开始的比赛">
+          <CompetitionInfos :competitions="notStartedCompetitions" @message-from-child="handleMessage" />
+        </el-tab-pane>
+        <el-tab-pane label="进行中的比赛">
+          <CompetitionInfos :competitions="ongoingCompetitions" @message-from-child="handleMessage" />
+        </el-tab-pane>
+        <el-tab-pane label="已完成的比赛">
+          <CompetitionInfos :competitions="finishedCompetitions" @message-from-child="handleMessage" />
+        </el-tab-pane>
+        <el-tab-pane label="取消的比赛">
+          <CompetitionInfos :competitions="cancelCompetitions" @message-from-child="handleMessage" />
+        </el-tab-pane>
+      </el-tabs>
     </div>
-    <el-tabs type="border-card" v-if="isDataLoaded">
-      <el-tab-pane label="还没有开始的比赛">
-        <CompetitionInfos :competitions="notStartedCompetitions"
-                          @message-from-child="handleMessage"/>
-      </el-tab-pane>
-      <el-tab-pane label="进行中的比赛">
-        <CompetitionInfos :competitions="ongoingCompetitions" @message-from-child="handleMessage"/>
-      </el-tab-pane>
-      <el-tab-pane label="已完成的比赛">
-        <CompetitionInfos :competitions="finishedCompetitions" @message-from-child="handleMessage"/>
-      </el-tab-pane>
-      <el-tab-pane label="取消的比赛">
-        <CompetitionInfos :competitions="cancelCompetitions" @message-from-child="handleMessage"/>
-      </el-tab-pane>
-    </el-tabs>
+
+    <div class="fixed-reload-btn">
+      <el-button type="primary" @click="handleMessage('重新加载数据')"
+        class="shadow-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95">
+        <el-icon class="mr-2">
+          <refresh />
+        </el-icon>
+        刷新数据
+      </el-button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref} from 'vue';
+import { onMounted, ref } from 'vue';
 import axios from 'axios';
 import CompetitionInfos from '../components/CompetitionInfos.vue'; // 导入组件
-import {ElLoading} from 'element-plus'
-import {activityFunctions, type ActivityView} from '../functions/ActivityFunctions'
-
-import {useMatchStore} from '../store/matchStore.ts'
+import { ElLoading } from 'element-plus'
+import { activityFunctions, type ActivityView } from '../functions/ActivityFunctions'
+import { Refresh } from '@element-plus/icons-vue'
+import { useMatchStore } from '../store/matchStore.ts'
 
 const matchStore = useMatchStore();
-const {clearCache} = activityFunctions();
+const { clearCache } = activityFunctions();
 
 const clearActivityCache = () => {
   clearCache()
@@ -56,7 +63,7 @@ const handleMessage = (message: string) => {
 // 获取比赛历史信息
 const fetchCompetitions = async () => {
   try {
-    const loadingInstance = ElLoading.service({fullscreen: true, text: "数据加载中…………"})
+    const loadingInstance = ElLoading.service({ fullscreen: true, text: "数据加载中…………" })
     const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/activity/all`);
     const allCompetitions: ActivityView[] = response.data;
 
@@ -132,8 +139,25 @@ onMounted(() => {
   padding: 20px;
 }
 
-.load-competition{
-  margin-bottom: 20px;
-  text-align: right;
+// 修改样式部分
+.fixed-reload-btn {
+  /* 移除 @apply 规则，因为 SCSS 默认不支持 Tailwind 的 @apply 规则 */
+  position: fixed;
+  bottom: 1rem;
+  /* 等同于 Tailwind 的 bottom-4 */
+  right: 1rem;
+  /* 等同于 Tailwind 的 right-4 */
+  z-index: 1000;
+  /* 等同于 Tailwind 的 z-1000 */
+
+  .el-button {
+    padding: 12px 24px;
+    border-radius: 25px;
+  }
+
+  .el-button {
+    padding: 12px 24px;
+    border-radius: 25px;
+  }
 }
 </style>
