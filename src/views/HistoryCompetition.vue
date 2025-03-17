@@ -64,8 +64,22 @@ const handleMessage = (message: string) => {
 const fetchCompetitions = async () => {
   try {
     const loadingInstance = ElLoading.service({ fullscreen: true, text: "数据加载中…………" })
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/activity/all`);
+    const response = await axios.get(`${import.meta.env.VITE_API2_BASE_URL}/apid/activity/infos`);
     const allCompetitions: ActivityView[] = response.data;
+
+    // 打印第一个比赛对象以检查holding_date的类型
+    if (allCompetitions.length > 0) {
+      console.log('第一个比赛对象:', allCompetitions[0]);
+      console.log('holding_date类型:', typeof allCompetitions[0].holding_date);
+      console.log('holding_date值:', allCompetitions[0].holding_date);
+    }
+
+    // 按照holding_date进行排序
+    allCompetitions.sort((a, b) => {
+      const dateA = new Date(a.holding_date).getTime();
+      const dateB = new Date(b.holding_date).getTime();
+      return dateB - dateA;
+    });
 
     // 根据 status 属性进行分组
     notStartedCompetitions.value = allCompetitions.filter(competition => competition.status === 0);

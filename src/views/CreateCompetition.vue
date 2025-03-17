@@ -144,7 +144,7 @@ const createActivity = async (status: number) => {
       if (valid) {
         try {
           formData.status = status;
-          const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/activity/publish`, formData, {
+          const response = await axios.post(`${import.meta.env.VITE_API2_BASE_URL}/apid/activity/create`, formData, {
             headers: {
               'Content-Type': 'application/json'
             }

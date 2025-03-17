@@ -1,5 +1,5 @@
-import {ElNotification} from "element-plus";
-import {DateTime} from "luxon";
+import { ElNotification } from "element-plus";
+import { DateTime } from "luxon";
 
 const successNotify = () => {
   ElNotification({
@@ -13,31 +13,42 @@ export interface ActivityView {
   id: string;
   name: string;
   location: string;
-  startTime: DateTime | null;
-  endTime: DateTime | null;
-  registCount: number;
-  holdingDate: DateTime;
+  start_time: DateTime | null;
+  end_time: DateTime | null;
+  regist_count: number;
+  holding_date: string;
   status: number;
-  billingType: string,
-  userInfos: UserInfoView[] | null;
+  billing_type: string,
+  opposing: string;
+  opposing_color: string;
+  color: string;
+  cover: string;
+  desc: string;
+  players_per_team: number;
+  user_infos: UserActivityView[] | null;
+}
+
+export interface UserActivityView {
+  activity_id: string;
+  operation_time: string;
+  user_id: string;
+  stand: number;
+  paid: number;
+  is_editing: boolean;
 }
 
 export interface UserInfoView {
-  openId: string;
-  nickName: string;
-  avatarUrl: string;
-  stand: number;
-  isEditing: boolean;
+  open_id: string;
+  union_id: string;
+  avatar_url: string;
+  username: string;
+  nickname: string;
+  real_name: string,
+  is_manager: boolean;
+  latest_login_date: Date;
 }
 
-export interface ActivityInfo {
-  activityId: string;
-  opposing: string;
-  color: string;
-  opposingColor: string;
-  playersPerTeam: number;
-  billingType: string;
-}
+
 
 export const activityFunctions = () => {
 

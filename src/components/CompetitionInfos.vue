@@ -2,17 +2,17 @@
   <!-- 下拉框选择比赛 -->
   <el-select v-model="selectedCompetitionId" placeholder="请选择比赛" @change="onCompetitionChange">
     <el-option v-for="competition in competitions" :key="competition.id"
-      :label="competition.name + ' || ' + competition.holdingDate" :value="competition.id" />
+      :label="competition.name + ' || ' + competition.holding_date" :value="competition.id" />
   </el-select>
   <!-- 展示比赛信息 -->
   <div v-if="selectedCompetition" class="competition-info">
     <p><strong>比赛名称:</strong> {{ selectedCompetition.name }}</p>
     <p><strong>比赛地点:</strong> {{ selectedCompetition.location }}</p>
-    <p><strong>对手名称:</strong> {{ selectedActivityInfo?.opposing }}</p>
-    <p><strong>开始时间:</strong> {{ selectedCompetition.startTime }}</p>
-    <p><strong>结束时间:</strong> {{ selectedCompetition.endTime }}</p>
-    <p><strong>举办日期:</strong> {{ selectedCompetition.holdingDate }}</p>
-    <p><strong>费用:</strong> {{ selectedCompetition.billingType }}</p>
+    <p><strong>对手名称:</strong> {{ selectedCompetition.opposing }}</p>
+    <p><strong>开始时间:</strong> {{ selectedCompetition.start_time }}</p>
+    <p><strong>结束时间:</strong> {{ selectedCompetition.end_time }}</p>
+    <p><strong>举办日期:</strong> {{ selectedCompetition.holding_date }}</p>
+    <p><strong>费用:</strong> {{ selectedCompetition.billing_type }}</p>
     <!-- 状态展示与修改 -->
     <el-form-item label="比赛状态">
       <div v-if="!isEditingStatus">
@@ -28,8 +28,9 @@
           <el-option label="已完赛" value="2" />
           <el-option label="已取消" value="3" />
         </el-select>
-        <el-button type="primary" @click="submitStatusChange">提交</el-button>
-        <el-button @click="cancelStatusEdit">取消</el-button>
+        <el-input v-model="selectedCompetition.desc" type="textarea" :rows="2" placeholder="请输入比赛备注" class="mt-2" />
+        <el-button type="primary" @click="submitStatusChange" class="mt-2">提交</el-button>
+        <el-button @click="cancelStatusEdit" class="mt-2">取消</el-button>
       </div>
     </el-form-item>
     <!-- 参赛人员信息 -->
@@ -50,10 +51,11 @@
       <div v-for="stand in standOrder" :key="stand" class="user-info-item">
         <el-divider class="mb-2 mt-6 font-bold">{{ getStatusText(Number(stand)) }}</el-divider>
         <div class="group-user-info-item">
-          <div v-for="user in groupedUserInfosByStand[stand]" :key="user.openId" class="user-info-item">
-            <img :src="getAvatarUrl(user.avatarUrl)" alt="用户头像" class="user-avatar" />
-            <p class="user-nickname">{{ user.nickName }}</p>
-            <div v-if="!user.isEditing" class="user-status">
+          <div v-for="user in groupedUserInfosByStand[stand]" :key="user.user_id" class="user-info-item">
+            <img :src="getAvatarUrl(allUserInfoMap[user.user_id]?.avatarUrl)" alt="用户头像" class="user-avatar" />
+
+            <p class="user-nickname">{{ allUserInfoMap[user.user_id]?.nickname }}</p>
+            <div v-if="!user.is_editing" class="user-status">
               <el-tag :type="getStatusTagType(user.stand)">
                 {{ getStatusText(user.stand) }}
               </el-tag>
@@ -80,12 +82,16 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useMatchStore } from '../store/matchStore.ts'
+import { useUserStore } from '../store/userStore'
 import axios from 'axios';
 import {
-  type ActivityInfo,
   type ActivityView,
-  type UserInfoView
+  type UserActivityView
 } from '../functions/ActivityFunctions'
+
+import {
+  type UserInfoAlias
+} from '../types/user';
 
 const emit = defineEmits(['message-from-child']); // 定义事件
 
@@ -103,16 +109,23 @@ watch(() => matchStore.clearCache, (newValue) => {
     matchStore.resetCache()
   }
 });
-
+const allUserInfoMap = ref<Record<string, UserInfoAlias>>({});
+const userStore = useUserStore();
+watch(() => userStore.userInfos, (newValue) => {
+  if (newValue) {
+    // 将 allUserInfo 转换为 Map
+    allUserInfoMap.value = newValue.reduce((map, user) => {
+      map[user.userId] = user;
+      return map;
+    }, {} as Record<string, UserInfoAlias>);
+  }
+});
 // 当前选择的比赛 ID
 const selectedCompetitionId = ref<string>('');
 // 当前选择的比赛信息
 const selectedCompetition = ref<ActivityView | null>(null);
-const selectedActivityInfo = ref<ActivityInfo | null>(null);
 // 控制比赛状态是否处于编辑状态
 const isEditingStatus = ref(false);
-
-const allUserInfo = ref<UserInfoView[]>([]);
 
 // 不参加人数
 const participatingCount = ref<number>(0);
@@ -121,7 +134,7 @@ const notParticipatingCount = ref<number>(0);
 // 未报名人数
 const unregisteredCount = ref<number>(0);
 //0 代表未报名，1代表参加，2代表不参加
-const groupedUserInfosByStand = ref<Record<string, UserInfoView[]>>({});
+const groupedUserInfosByStand = ref<Record<string, UserActivityView[]>>({});
 // 监听 allUserInfo 和 selectedCompetition 的变化，更新不参加人数和未报名人数
 watch(groupedUserInfosByStand, () => {
   participatingCount.value = groupedUserInfosByStand.value['1']?.length || 0;
@@ -132,13 +145,6 @@ watch(groupedUserInfosByStand, () => {
 
 
 const standOrder = ref<string[]>(['1', '2', '0']); // 1 最前面，2 中间，0 最后面
-
-interface UserActivityRequest {
-  userId: string,
-  activityId: string,
-  stand: number,
-  paid: boolean
-}
 
 // 获取比赛历史信息
 const fetchCompetitions = async () => {
@@ -155,27 +161,38 @@ const fetchCompetitions = async () => {
 // 根据比赛 ID 获取详细信息（包含 userInfos）
 const fetchCompetitionDetails = async (matchId: string) => {
   try {
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/activity/${matchId}`);
+    const response = await axios.get(`${import.meta.env.VITE_API2_BASE_URL}/apid/activity/${matchId}/users`);
     const data = response.data;
-    data.userInfos.forEach((user: UserInfoView) => {
-      user.isEditing = false;
+    console.log("xxxxxx" + data);
+    data.user_infos.forEach((user: UserActivityView) => {
+      user.is_editing = false;
     });
-    selectedCompetition.value = data;
+    selectedCompetition.value = {
+      ...data.activity,
+      user_infos: data.user_infos
+    };
     if (selectedCompetition.value) {
-      selectedCompetition.value.billingType = 'AA';
+      selectedCompetition.value.billing_type = 'AA';
     }
 
     // 合并未报名的用户信息
-    if (selectedCompetition.value && allUserInfo.value.length > 0 && selectedCompetition.value.userInfos) {
-      const registeredUserIds = new Set(selectedCompetition.value.userInfos.map(user => user.openId));
-      const unregisteredUsers = allUserInfo.value.filter(user => !registeredUserIds.has(user.openId));
+    if (selectedCompetition.value && Object.keys(allUserInfoMap.value).length > 0 && selectedCompetition.value.user_infos) {
+      const registeredUserIds = new Set(selectedCompetition.value.user_infos.map(user => user.user_id));
+      const unregisteredUsers = Object.values(allUserInfoMap.value).filter(user => !registeredUserIds.has(user.userId));
       unregisteredUsers.forEach(user => {
-        user.stand = 0; // 设置为未报名
-        user.isEditing = false;
+        const useActivityView: UserActivityView = {
+          activity_id: selectedCompetition.value?.id || '',
+          user_id: user.userId,
+          stand: 0,
+          is_editing: false,
+          paid: 0,
+          operation_time: '',
+        };
+        selectedCompetition.value?.user_infos?.push(useActivityView);
       });
-      selectedCompetition.value.userInfos = [...selectedCompetition.value.userInfos, ...unregisteredUsers];
       // 按照 stand 分组
-      groupedUserInfosByStand.value = groupByStand(selectedCompetition.value.userInfos)
+      groupedUserInfosByStand.value = groupByStand(selectedCompetition.value.user_infos)
+      console.log("xxxxxxxxx" + selectedCompetition.value.name)
     }
 
   } catch (error) {
@@ -183,13 +200,8 @@ const fetchCompetitionDetails = async (matchId: string) => {
   }
 };
 
-const fetchCompetitionInfo = async (matchId: string) => {
-  const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/activity-info/${matchId}`);
-  selectedActivityInfo.value = response.data;
-};
-
 // 按照 stand 分组的函数
-const groupByStand = (userInfos: UserInfoView[]): Record<string, UserInfoView[]> => {
+const groupByStand = (userInfos: UserActivityView[]): Record<string, UserActivityView[]> => {
   return userInfos.reduce((grouped, user) => {
     const key = user.stand.toString(); // 将 stand 转为字符串作为分组键
     if (!grouped[key]) {
@@ -197,27 +209,13 @@ const groupByStand = (userInfos: UserInfoView[]): Record<string, UserInfoView[]>
     }
     grouped[key].push(user);
     return grouped;
-  }, {} as Record<string, UserInfoView[]>);
-};
-
-
-// 排序函数
-const sortUserInfos = (userInfos: UserInfoView[]): UserInfoView[] => {
-  return userInfos.sort((a, b) => {
-    if (a.stand === b.stand) return 0;
-    if (a.stand === 1) return -1; // 报名参加的排在最前面
-    if (b.stand === 1) return 1;
-    if (a.stand === 2) return -1; // 报名无法参加的排在中间
-    if (b.stand === 2) return 1;
-    return 0; // 未报名的排在最后面
-  });
+  }, {} as Record<string, UserActivityView[]>);
 };
 
 
 // 处理比赛选择变化
 const onCompetitionChange = async () => {
   await fetchCompetitionDetails(selectedCompetitionId.value);
-  await fetchCompetitionInfo(selectedCompetitionId.value);
 };
 
 // 开始编辑比赛状态
@@ -234,11 +232,11 @@ const submitStatusChange = async () => {
       return;
     }
 
-    await axios.put(
-      `${import.meta.env.VITE_API_BASE_URL}/api/activity/status`,
+    await axios.patch(
+      `${import.meta.env.VITE_API2_BASE_URL}/apid/activity/${selectedCompetition.value.id}/status`,
       {
         status: Number(selectedCompetition.value.status),
-        id: selectedCompetition.value.id
+        desc: selectedCompetition.value.desc
       }
     );
     isEditingStatus.value = false;
@@ -257,25 +255,25 @@ const cancelStatusEdit = () => {
 };
 
 // 开始编辑人员参赛状态
-const startUserEditing = (user: UserInfoView) => {
-  user.isEditing = true;
+const startUserEditing = (user: UserActivityView) => {
+  user.is_editing = true;
 };
 
 // 提交人员参赛状态修改
-const submitUserStatusChange = async (user: UserInfoView) => {
+const submitUserStatusChange = async (user: UserActivityView) => {
 
   try {
-    await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}/api/user-activity/registration`,
+    await axios.patch(
+      `${import.meta.env.VITE_API2_BASE_URL}/apid/activity/${selectedCompetition.value?.id}/user/${user.user_id}/stand`,
       {
-        userId: user.openId,
-        activityId: selectedCompetition.value?.id,
         stand: user.stand,
-        paid: false
       }
     )
       ;
-    user.isEditing = false;
+    user.is_editing = false;
+    if (selectedCompetition.value?.id) {
+      await fetchCompetitionDetails(selectedCompetition.value.id);
+    }
     console.log('人员参赛状态更新成功');
   } catch
   (error) {
@@ -285,8 +283,8 @@ const submitUserStatusChange = async (user: UserInfoView) => {
   ;
 
 // 取消编辑人员参赛状态
-const cancelUserEditing = (user: UserInfoView) => {
-  user.isEditing = false;
+const cancelUserEditing = (user: UserActivityView) => {
+  user.is_editing = false;
 };
 
 // 根据参赛人员状态值返回对应的文本
@@ -348,6 +346,13 @@ const getCompetitionStatusTagType = (status: number) => {
 };
 
 const getAvatarUrl = (avatarUrl: string | null | undefined): string => {
+  // 添加日志输出，检查用户信息
+  Object.entries(allUserInfoMap.value).forEach(([userId, userInfo]) => {
+    if (!userInfo.nickname) {
+      console.log(`用户ID: ${userId} 的nickname为空`);
+    }
+  });
+
   if (!avatarUrl) {
     return '/src/static/default-avatar-for-activity.png';
   }
@@ -362,12 +367,11 @@ const getAvatarUrl = (avatarUrl: string | null | undefined): string => {
 
 // 实现 fetchAllUserInfo 函数
 const fetchAllUserInfo = async () => {
-  try {
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/info/all`);
-    allUserInfo.value = response.data;
-  } catch (error) {
-    console.error('获取所有用户信息失败:', error);
-  }
+  const userInfos = userStore.getAllUsers.reduce((acc, user) => {
+    acc[user.userId] = user;
+    return acc;
+  }, {} as Record<string, UserInfoAlias>);
+  allUserInfoMap.value = userInfos
 };
 // 封装异步初始化逻辑
 const initialize = async () => {
