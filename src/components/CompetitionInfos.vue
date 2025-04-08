@@ -54,7 +54,8 @@
           <div v-for="user in groupedUserInfosByStand[stand]" :key="user.user_id" class="user-info-item">
             <img :src="getAvatarUrl(allUserInfoMap[user.user_id]?.avatarUrl)" alt="用户头像" class="user-avatar" />
 
-            <p class="user-nickname">{{ allUserInfoMap[user.user_id]?.nickname }}</p>
+            <p class="user-nickname">{{ allUserInfoMap[user.user_id]?.realName }}</p>
+            <p class="user-registration-count">报名人数：{{ user.registration_count }}</p>
             <div v-if="!user.is_editing" class="user-status">
               <el-tag :type="getStatusTagType(user.stand)">
                 {{ getStatusText(user.stand) }}
@@ -187,6 +188,7 @@ const fetchCompetitionDetails = async (matchId: string) => {
           is_editing: false,
           paid: 0,
           operation_time: '',
+          registration_count:0
         };
         selectedCompetition.value?.user_infos?.push(useActivityView);
       });

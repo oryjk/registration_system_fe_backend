@@ -14,11 +14,6 @@ export const useUserStore = defineStore('userStore', {
     // 获取所有用户信息
     getAllUsers: (state) => state.userInfos,
 
-    // 根据ID获取特定用户
-    getUserById: (state) => (openId: string) => {
-      return state.userInfos.find(user => user.userId === openId);
-    },
-
     // 判断数据是否已加载
     isDataLoaded: (state) => state.userInfos.length > 0 && !state.isLoading
   },

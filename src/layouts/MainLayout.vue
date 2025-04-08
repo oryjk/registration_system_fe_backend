@@ -13,7 +13,6 @@
           </h1>
         </div>
         <div class="flex items-center space-x-4">
-          <el-button type="primary" :icon="Refresh" circle />
           <el-avatar :size="32" :icon="User" />
         </div>
       </el-header>
@@ -56,7 +55,6 @@
 import { Document, Clock, Setting } from '@element-plus/icons-vue'
 import { useRouter, useRoute } from 'vue-router';
 import { onMounted } from 'vue';
-import { Refresh } from '@element-plus/icons-vue'
 import { User } from '@element-plus/icons-vue'
 import { useUserStore } from '../store/userStore'
 

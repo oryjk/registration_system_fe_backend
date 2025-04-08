@@ -31,10 +31,11 @@ export interface ActivityView {
 export interface UserActivityView {
   activity_id: string;
   operation_time: string;
-  user_id: string;
+  user_id: number;
   stand: number;
   paid: number;
   is_editing: boolean;
+  registration_count:number;
 }
 
 export interface UserInfoView {

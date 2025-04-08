@@ -1,6 +1,6 @@
 // 用户信息字段别名映射
 export type UserInfoAlias = {
-  userId: string;      // 对应 open_id
+  userId: number;      // 对应 open_id
   unionId: string;     // 对应 union_id
   avatarUrl: string;   // 对应 avatar_url
   username: string;    // 保持不变
@@ -12,6 +12,7 @@ export type UserInfoAlias = {
 
 // 原始用户信息接口
 export interface UserInfoView {
+  id: number;
   open_id: string;
   union_id: string;
   avatar_url: string;
@@ -25,7 +26,7 @@ export interface UserInfoView {
 // 转换函数：将原始用户信息转换为别名格式
 export function toUserInfoAlias(user: UserInfoView): UserInfoAlias {
   return {
-    userId: user.open_id,
+    userId: user.id,
     unionId: user.union_id,
     avatarUrl: user.avatar_url,
     username: user.username,
@@ -36,16 +37,4 @@ export function toUserInfoAlias(user: UserInfoView): UserInfoAlias {
   };
 }
 
-// 转换函数：将别名格式转换为原始用户信息
-export function fromUserInfoAlias(userAlias: UserInfoAlias): UserInfoView {
-  return {
-    open_id: userAlias.userId,
-    union_id: userAlias.unionId,
-    avatar_url: userAlias.avatarUrl,
-    username: userAlias.username,
-    nickname: userAlias.nickname,
-    real_name: userAlias.realName,
-    is_manager: userAlias.isManager,
-    latest_login_date: userAlias.latestLoginDate
-  };
-}
+
