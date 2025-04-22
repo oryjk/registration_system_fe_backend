@@ -1,12 +1,12 @@
 // 用户信息字段别名映射
 export type UserInfoAlias = {
-  userId: number;      // 对应 open_id
-  unionId: string;     // 对应 union_id
-  avatarUrl: string;   // 对应 avatar_url
-  username: string;    // 保持不变
-  nickname: string;    // 保持不变
-  realName: string;    // 对应 real_name
-  isManager: boolean;  // 对应 is_manager
+  userId: number; // 对应 open_id
+  unionId: string; // 对应 union_id
+  avatarUrl: string; // 对应 avatar_url
+  username: string; // 保持不变
+  nickname: string; // 保持不变
+  realName: string; // 对应 real_name
+  isManager: boolean; // 对应 is_manager
   latestLoginDate: Date; // 对应 latest_login_date
 };
 
@@ -33,8 +33,6 @@ export function toUserInfoAlias(user: UserInfoView): UserInfoAlias {
     nickname: user.nickname,
     realName: user.real_name,
     isManager: user.is_manager,
-    latestLoginDate: user.latest_login_date
+    latestLoginDate: user.latest_login_date,
   };
 }
-
-

@@ -68,6 +68,7 @@
                 <el-option label="报名参加" value="1" />
                 <el-option label="报名无法参加" value="2" />
               </el-select>
+              <el-input v-model="user.registration_count" type="number" placeholder="请输入报名人数" class="mt-2" />
               <el-button type="primary" @click="submitUserStatusChange(user)">提交</el-button>
               <el-button @click="cancelUserEditing(user)">取消</el-button>
             </div>
@@ -114,7 +115,7 @@ const allUserInfoMap = ref<Record<string, UserInfoAlias>>({});
 const userStore = useUserStore();
 watch(() => userStore.userInfos, (newValue) => {
   if (newValue) {
-    // 将 allUserInfo 转换为 Map
+    // 将 allUserInfo 转换为 Map``
     allUserInfoMap.value = newValue.reduce((map, user) => {
       map[user.userId] = user;
       return map;
@@ -268,6 +269,7 @@ const submitUserStatusChange = async (user: UserActivityView) => {
     await axios.patch(
       `${import.meta.env.VITE_API2_BASE_URL}/apid/activity/${selectedCompetition.value?.id}/user/${user.user_id}/stand`,
       {
+        count:user.registration_count,
         stand: user.stand,
       }
     )

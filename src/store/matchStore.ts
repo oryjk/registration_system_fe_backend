@@ -1,6 +1,6 @@
-import {defineStore} from "pinia";
+import { defineStore } from "pinia";
 
-export const useMatchStore = defineStore('refreshActivity', {
+export const useMatchStore = defineStore("refreshActivity", {
   state: () => ({
     clearCache: false,
   }),
@@ -10,6 +10,6 @@ export const useMatchStore = defineStore('refreshActivity', {
     },
     resetCache() {
       this.clearCache = false;
-    }
-  }
+    },
+  },
 });

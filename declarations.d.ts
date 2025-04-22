@@ -1,4 +1,4 @@
-declare module 'element-plus/dist/locale/zh-cn.mjs';
+declare module "element-plus/dist/locale/zh-cn.mjs";
 
 interface Window {
   wx: {
@@ -12,5 +12,5 @@ interface Window {
     }) => void;
     ready: (callback: () => void) => void;
     error: (callback: (err: any) => void) => void;
-  }
+  };
 }

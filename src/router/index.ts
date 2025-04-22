@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from "vue-router";
 
 const routes = [
   // {
@@ -12,32 +12,37 @@ const routes = [
   //   component: () => import('../views/WxCallback.vue')
   // },
   {
-    path: '/',
-    component: () => import('../layouts/MainLayout.vue'),
+    path: "/",
+    component: () => import("../layouts/MainLayout.vue"),
     children: [
       {
-        path: '/create-competition',
-        name: 'CreateCompetition',
-        component: () => import('../views/CreateCompetition.vue')
+        path: "/create-competition",
+        name: "CreateCompetition",
+        component: () => import("../views/CreateCompetition.vue"),
       },
       {
-        path: '/history-competition',
-        name: 'HistoryCompetition',
-        component: () => import('../views/HistoryCompetition.vue')
+        path: "/history-competition",
+        name: "HistoryCompetition",
+        component: () => import("../views/HistoryCompetition.vue"),
       },
       {
-        path: '/settings',
-        name: 'Settings',
-        component: () => import('../views/SystemSettings.vue')
-      }
-    ]
-  }
-]
+        path: "/settings",
+        name: "Settings",
+        component: () => import("../views/SystemSettings.vue"),
+      },
+      {
+        path: "/user-info",
+        name: "UserInfo",
+        component: () => import("../views/UserInfo.vue"),
+      },
+    ],
+  },
+];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
-})
+  routes,
+});
 
 // 路由守卫
 // router.beforeEach((to, from, next) => {
@@ -49,4 +54,4 @@ const router = createRouter({
 //   }
 // })
 
-export default router
+export default router;
