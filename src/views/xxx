@@ -1,0 +1,38 @@
+create table t_hb_wechat_user
+(
+    id               bigint       not null
+        primary key,
+    phone            varchar(255) null,
+    nickname         varchar(255) null,
+    open_id          varchar(255) null,
+    ticket           text         null,
+    data_key         varchar(255) null,
+    customer_id      varchar(255) null,
+    transferh5ticket varchar(255) null,
+    full_head_pic    varchar(255) null,
+    account_status   varchar(10)  null,
+    register_time    datetime     null,
+    login_time       datetime     null,
+    bind_key         varchar(255) null,
+    user_info_id     bigint       null
+);
+
+
+create table t_hb_wechat_user
+(
+    id               bigint       not null
+        primary key,
+    phone            varchar(255) null,
+    nickname         varchar(255) null,
+    open_id          varchar(255) null,
+    ticket           text         null,
+    data_key         varchar(255) null,
+    customer_id      varchar(255) null,
+    transferh5ticket varchar(255) null,
+    full_head_pic    varchar(255) null,
+    account_status   varchar(10)  null,
+    register_time    datetime     null,
+    login_time       datetime     null
+);
+
+
