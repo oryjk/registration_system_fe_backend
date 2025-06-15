@@ -13,6 +13,7 @@
     <p><strong>结束时间:</strong> {{ selectedCompetition.end_time }}</p>
     <p><strong>举办日期:</strong> {{ selectedCompetition.holding_date }}</p>
     <p><strong>费用:</strong> {{ selectedCompetition.billing_type }}</p>
+    <p><strong>备注:</strong> {{ selectedCompetition.description }}</p>
     <!-- 状态展示与修改 -->
     <el-form-item label="比赛状态">
       <div v-if="!isEditingStatus">
@@ -164,13 +165,13 @@ const fetchCompetitions = async () => {
 const fetchCompetitionDetails = async (matchId: string) => {
   try {
     const response = await axios.get(`${import.meta.env.VITE_API2_BASE_URL}/apid/activity/${matchId}/users`);
-    const data = response.data;
+    const data = response.data.data;
     console.log("xxxxxx" + data);
     data.user_infos.forEach((user: UserActivityView) => {
       user.is_editing = false;
     });
     selectedCompetition.value = {
-      ...data.activity,
+      ...data.activity_info,
       user_infos: data.user_infos
     };
     if (selectedCompetition.value) {

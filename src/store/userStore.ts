@@ -45,7 +45,7 @@ export const useUserStore = defineStore("userStore", {
           `${import.meta.env.VITE_API2_BASE_URL}/apid/user/infos`,
         );
 
-        this.userInfos = response.data.map((user: UserInfoView) =>
+        this.userInfos = response.data.data.map((user: UserInfoView) =>
           toUserInfoAlias(user)
         );
         console.log("user infos:", this.userInfos);

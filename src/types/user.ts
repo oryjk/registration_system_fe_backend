@@ -36,3 +36,5 @@ export function toUserInfoAlias(user: UserInfoView): UserInfoAlias {
     latestLoginDate: user.latest_login_date,
   };
 }
+
+export type BillingType = 'ACTIVITY_FEE' | 'PENALTY' | 'RECHARGE';

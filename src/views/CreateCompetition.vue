@@ -56,6 +56,9 @@
           <el-option label="免费" value="FREE"/>
         </el-select>
       </el-form-item>
+      <el-form-item label="备注信息" prop="cover">
+        <el-input v-model="formData.description" placeholder="请输入备注信息"/>
+      </el-form-item>
       <!-- 提交按钮 -->
       <el-form-item>
         <el-button type="primary" @click="createActivity(0)">立即创建</el-button>
@@ -89,6 +92,7 @@ const formData = reactive({
   status: 0,
   location: '驿马河二期',
   holdingDate: '',
+  description:'',
   activityInfo: {
     color: '#FFFFFF',
     opposing: '待定',

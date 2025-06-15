@@ -19,7 +19,7 @@
 
     <div class="fixed-reload-btn">
       <el-button type="primary" @click="handleMessage('重新加载数据')"
-        class="shadow-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95" 
+        class="shadow-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95"
         :icon="Refresh" >
         刷新数据
       </el-button>

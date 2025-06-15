@@ -45,6 +45,12 @@
           </el-icon>
           <span>用户信息</span>
         </el-menu-item>
+        <el-menu-item index="/user-billing">
+          <el-icon>
+            <document />
+          </el-icon>
+          <span>用户账单</span>
+        </el-menu-item>
       </el-menu>
 
 
@@ -80,10 +86,7 @@ const router = useRouter();
 const route = useRoute();
 onMounted(async () => {
   await userStore.fetchUserInfos();
-  // 如果当前路由不是 /user-info，则导航到该路由
-  if (route.path !== '/user-info') {
-    router.push('/user-info');
-  }
+
 });
 
 const currentUser = computed(() => {

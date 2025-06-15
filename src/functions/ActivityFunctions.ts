@@ -18,6 +18,7 @@ export interface ActivityView {
   regist_count: number;
   holding_date: string;
   status: number;
+  description: string;
   billing_type: string;
   opposing: string;
   opposing_color: string;
@@ -26,6 +27,8 @@ export interface ActivityView {
   desc: string;
   players_per_team: number;
   user_infos: UserActivityView[] | null;
+  total:number;
+  fee:number;
 }
 
 export interface UserActivityView {
