@@ -78,6 +78,7 @@ const handleLogout = () => {
   userStore.$reset()
   // 跳转到登录页
   router.push('/login')
+
 }
 
 const router = useRouter();
