@@ -9,6 +9,7 @@ import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import tailwindcss from "@tailwindcss/vite";
 // https://vite.dev/config/
 export default defineConfig({
+  base: "/rs-backend/",
   server: {
     host: "0.0.0.0",
     port: 5173,

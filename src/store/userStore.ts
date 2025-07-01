@@ -26,6 +26,7 @@ export const useUserStore = defineStore("userStore", {
     // 获取所有用户信息
     async fetchUserInfos() {
       // 如果已经加载过数据且在短时间内（例如5分钟），则不重复加载
+      console.log(`fetching user infos... 111${this.userInfos}`)
       const now = new Date();
       if (
         this.lastFetchTime &&

@@ -2,16 +2,19 @@
   <!-- 下拉框选择比赛 -->
   <el-select v-model="selectedCompetitionId" placeholder="请选择比赛" @change="onCompetitionChange">
     <el-option v-for="competition in competitions" :key="competition.id"
-      :label="competition.name + ' || ' + competition.holding_date" :value="competition.id" />
+      :label="competition.name + ' || ' + new Date(competition.holding_date).toLocaleString()"
+      :value="competition.id" />
   </el-select>
   <!-- 展示比赛信息 -->
   <div v-if="selectedCompetition" class="competition-info">
     <p><strong>比赛名称:</strong> {{ selectedCompetition.name }}</p>
     <p><strong>比赛地点:</strong> {{ selectedCompetition.location }}</p>
     <p><strong>对手名称:</strong> {{ selectedCompetition.opposing }}</p>
-    <p><strong>开始时间:</strong> {{ selectedCompetition.start_time }}</p>
-    <p><strong>结束时间:</strong> {{ selectedCompetition.end_time }}</p>
-    <p><strong>举办日期:</strong> {{ selectedCompetition.holding_date }}</p>
+    <p><strong>开始时间:</strong> {{ new Date(selectedCompetition.start_time).toLocaleString() }}
+    </p>
+    <p><strong>结束时间:</strong> {{ new Date(selectedCompetition.end_time).toLocaleString() }}</p>
+    <p><strong>举办日期:</strong> {{ new Date(selectedCompetition.holding_date).toLocaleString() }}
+    </p>
     <p><strong>费用:</strong> {{ selectedCompetition.billing_type }}</p>
     <p><strong>备注:</strong> {{ selectedCompetition.description }}</p>
     <!-- 状态展示与修改 -->
@@ -146,12 +149,12 @@ watch(groupedUserInfosByStand, () => {
 });
 
 
-
 const standOrder = ref<string[]>(['1', '2', '0']); // 1 最前面，2 中间，0 最后面
 
 // 获取比赛历史信息
 const fetchCompetitions = async () => {
   try {
+
     if (props.competitions.length > 0) {
       selectedCompetitionId.value = props.competitions[0].id;
       await fetchCompetitionDetails(selectedCompetitionId.value);
@@ -164,9 +167,9 @@ const fetchCompetitions = async () => {
 // 根据比赛 ID 获取详细信息（包含 userInfos）
 const fetchCompetitionDetails = async (matchId: string) => {
   try {
+
     const response = await axios.get(`${import.meta.env.VITE_API2_BASE_URL}/apid/activity/${matchId}/users`);
     const data = response.data.data;
-    console.log("xxxxxx" + data);
     data.user_infos.forEach((user: UserActivityView) => {
       user.is_editing = false;
     });
@@ -179,7 +182,9 @@ const fetchCompetitionDetails = async (matchId: string) => {
     }
 
     // 合并未报名的用户信息
+    console.log(`match id ${JSON.stringify(allUserInfoMap.value)}`)
     if (selectedCompetition.value && Object.keys(allUserInfoMap.value).length > 0 && selectedCompetition.value.user_infos) {
+
       const registeredUserIds = new Set(selectedCompetition.value.user_infos.map(user => user.user_id));
       const unregisteredUsers = Object.values(allUserInfoMap.value).filter(user => !registeredUserIds.has(user.userId));
       unregisteredUsers.forEach(user => {
@@ -190,13 +195,16 @@ const fetchCompetitionDetails = async (matchId: string) => {
           is_editing: false,
           paid: 0,
           operation_time: '',
-          registration_count:0
+          registration_count: 0
         };
         selectedCompetition.value?.user_infos?.push(useActivityView);
       });
       // 按照 stand 分组
       groupedUserInfosByStand.value = groupByStand(selectedCompetition.value.user_infos)
-      console.log("xxxxxxxxx" + selectedCompetition.value.name)
+      console.log(`比赛信息加载完毕 ${selectedCompetition.value}`)
+    }
+    else {
+      console.log(`有问题，没有加载比赛信息`)
     }
 
   } catch (error) {
@@ -244,6 +252,7 @@ const submitStatusChange = async () => {
       }
     );
     isEditingStatus.value = false;
+
     emit('message-from-child', '比赛状态更新成功');
     selectedCompetition.value = null
     selectedCompetitionId.value = ''
@@ -270,7 +279,7 @@ const submitUserStatusChange = async (user: UserActivityView) => {
     await axios.patch(
       `${import.meta.env.VITE_API2_BASE_URL}/apid/activity/${selectedCompetition.value?.id}/user/${user.user_id}/stand`,
       {
-        count:user.registration_count,
+        count: user.registration_count,
         stand: user.stand,
       }
     )
@@ -359,14 +368,14 @@ const getAvatarUrl = (avatarUrl: string | null | undefined): string => {
   });
 
   if (!avatarUrl) {
-    return '/src/static/default-avatar-for-activity.png';
+    return import.meta.env.BASE_URL + '/src/static/default-avatar-for-activity.png';
   }
 
   try {
     window.atob(avatarUrl);
     return `data:image/jpeg;base64,${avatarUrl}`;
   } catch {
-    return '/src/static/default-avatar-for-activity.png';
+    return import.meta.env.BASE_URL + '/src/static/default-avatar-for-activity.png';
   }
 };
 
@@ -377,16 +386,17 @@ const fetchAllUserInfo = async () => {
     return acc;
   }, {} as Record<string, UserInfoAlias>);
   allUserInfoMap.value = userInfos
+  console.log(`fetchAllUserInfo ${JSON.stringify(allUserInfoMap.value)}`)
 };
 // 封装异步初始化逻辑
 const initialize = async () => {
-  console.log("开始初始化比赛数据")
   await fetchAllUserInfo();
   await fetchCompetitions();
+  console.log("完成初始化比赛数据")
 };
 // 组件挂载时获取比赛信息
-onMounted(() => {
-  initialize()
+onMounted(async () => {
+  await initialize()
 });
 
 

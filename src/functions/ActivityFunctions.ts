@@ -1,5 +1,4 @@
-import { ElNotification } from "element-plus";
-import { DateTime } from "luxon";
+import {ElNotification} from "element-plus";
 
 const successNotify = () => {
   ElNotification({
@@ -13,10 +12,10 @@ export interface ActivityView {
   id: string;
   name: string;
   location: string;
-  start_time: DateTime | null;
-  end_time: DateTime | null;
+  start_time: Date;
+  end_time: Date;
   regist_count: number;
-  holding_date: string;
+  holding_date: Date;
   status: number;
   description: string;
   billing_type: string;
@@ -27,8 +26,8 @@ export interface ActivityView {
   desc: string;
   players_per_team: number;
   user_infos: UserActivityView[] | null;
-  total:number;
-  fee:number;
+  total: number;
+  fee: number;
 }
 
 export interface UserActivityView {

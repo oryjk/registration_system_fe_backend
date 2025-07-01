@@ -16,6 +16,11 @@ const routes = [
     component: () => import("../layouts/MainLayout.vue"),
     children: [
       {
+        path: "", // <-- 确保有这个默认子路由，它会加载到 MainLayout 的 <router-view> 中
+        name: "首页", // 给它一个名字
+        component: () => import("../views/CreateCompetition.vue"), // 例如，你的首页仪表盘组件
+      },
+      {
         path: "/create-competition",
         name: "CreateCompetition",
         component: () => import("../views/CreateCompetition.vue"),
@@ -45,7 +50,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 

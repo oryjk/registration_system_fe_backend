@@ -5,9 +5,11 @@
       <el-form-item label="比赛名称" prop="name">
         <el-input v-model="formData.name" placeholder="请输入比赛名称"/>
       </el-form-item>
+
       <!-- 开始时间 -->
       <el-form-item label="报名开始时间" prop="startTime">
-        <el-date-picker v-model="formData.startTime" type="datetime" placeholder="选择开始日期时间"
+        <el-date-picker v-model="formData.startTime" type="datetime"
+                        placeholder="选择开始日期时间"
                         value-format="YYYY-MM-DD HH:mm" format="YYYY-MM-DD HH:mm:ss"/>
       </el-form-item>
       <!-- 结束时间 -->
@@ -69,12 +71,36 @@
 </template>
 
 <script setup lang="ts">
-import {reactive, ref} from 'vue';
+import {onMounted, reactive, ref} from 'vue';
 import axios from 'axios';
 import {ElForm, ElNotification} from 'element-plus';
 import {activityFunctions} from '../functions/ActivityFunctions'
 
+// 定义 activityInfo 的接口
+interface ActivityInfo {
+  color: string;
+  opposing: string;
+  opposingColor: string;
+  playersPerTeam: number;
+  billingType: 'AA' | 'other'; // 假设 billingType 只有这两种，或者你会有更多选项
+}
+
+// 定义整个表单数据的接口
+interface FormData {
+  name: string;
+  startTime: string | null; // 或者 Date | null，取决于你实际使用
+  endTime: string | null;
+  cover: string;
+  status: number;
+  location: string;
+  holdingDate: string | null; // 使用字符串格式 YYYY-MM-DD HH:mm:ss
+  description: string;
+  activityInfo: ActivityInfo;
+}
+
 const {clearCache} = activityFunctions();
+
+const value1 = ref<String>("")
 
 const errorNotify = (msg: string) => {
   ElNotification({
@@ -84,7 +110,7 @@ const errorNotify = (msg: string) => {
   })
 }
 // 初始化表单数据
-const formData = reactive({
+const formData: FormData = reactive({
   name: '周四友谊赛',
   startTime: '',
   endTime: '',
@@ -92,7 +118,7 @@ const formData = reactive({
   status: 0,
   location: '驿马河二期',
   holdingDate: '',
-  description:'',
+  description: '',
   activityInfo: {
     color: '#FFFFFF',
     opposing: '待定',
@@ -140,6 +166,37 @@ const rules = {
 const formRef = ref<InstanceType<typeof ElForm> | null>(null);
 
 
+function setNearestThursdayEvening(formData: FormData) {
+  const now = new Date();
+  const currentDayOfWeek = now.getDay(); // 0:Sunday, 1:Monday, ..., 6:Saturday
+  const thursdayDayOfWeek = 4; // Thursday is 4
+
+  // Calculate days until the next Thursday
+  let daysUntilThursday = (thursdayDayOfWeek - currentDayOfWeek + 7) % 7;
+
+  // If today is already Thursday, we want the *next* Thursday
+  if (currentDayOfWeek === thursdayDayOfWeek) {
+    daysUntilThursday = 7;
+  }
+
+  const nearestThursday = new Date(now);
+  nearestThursday.setDate(now.getDate() + daysUntilThursday);
+
+  // Set time to 8:15 PM (20:15)
+  nearestThursday.setHours(20, 15, 0, 0);
+
+  // Format the date to match 'YYYY-MM-DD HH:mm:ss'
+  const year = nearestThursday.getFullYear();
+  const month = String(nearestThursday.getMonth() + 1).padStart(2, '0');
+  const day = String(nearestThursday.getDate()).padStart(2, '0');
+  const hours = String(nearestThursday.getHours()).padStart(2, '0');
+  const minutes = String(nearestThursday.getMinutes()).padStart(2, '0');
+  const seconds = String(nearestThursday.getSeconds()).padStart(2, '0');
+  console.log(`${now.toLocaleString()}`)
+  formData.holdingDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  formData.endTime = `${year}-${month}-${String(nearestThursday.getDate() - 1).padStart(2, '0')} ${hours}:${minutes}:${seconds}`;
+}
+
 // 提交表单方法
 const createActivity = async (status: number) => {
   const form = formRef.value;
@@ -166,6 +223,10 @@ const createActivity = async (status: number) => {
     });
   }
 };
+
+onMounted(() => {
+  setNearestThursdayEvening(formData)
+})
 
 </script>
 
